@@ -1,0 +1,2732 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeHelper - Assistant de Programmation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4a6fa5;
+            --secondary: #166088;
+            --accent: #4cb5ae;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --sidebar-width: 280px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: #252526;
+            color: #cccccc;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #3c3c3c;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+        }
+        
+        .sidebar-header {
+            padding: 0 20px 20px;
+            border-bottom: 1px solid #3c3c3c;
+        }
+        
+        .sidebar-header h2 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.4rem;
+        }
+        
+        .sidebar-header h2 span {
+            color: var(--accent);
+        }
+        
+        .project-structure {
+            padding: 20px;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+        
+        .folder {
+            margin-bottom: 15px;
+        }
+        
+        .folder-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .folder-items {
+            padding-left: 20px;
+            display: none;
+        }
+        
+        .folder.active .folder-items {
+            display: block;
+        }
+        
+        .file {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 0;
+            color: #ccc;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+        
+        .file:hover {
+            color: white;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            width: calc(100vw - var(--sidebar-width));
+        }
+        
+        /* Header */
+        header {
+            background: #2d2d30;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #3c3c3c;
+        }
+        
+        .toggle-sidebar {
+            display: none;
+            background: none;
+            border: none;
+            color: #ccc;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+        
+        .user-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .user-actions button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: background 0.2s;
+        }
+        
+        .user-actions button:hover {
+            background: #3d5d90;
+        }
+        
+        /* Editor Area */
+        .editor-container {
+            display: flex;
+            flex-grow: 1;
+            padding: 20px;
+            gap: 20px;
+            overflow: hidden;
+        }
+        
+        .code-editor {
+            flex: 3;
+            background: #2d2d30;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #3c3c3c;
+        }
+        
+        .editor-header {
+            padding: 10px 15px;
+            background: #3c3c3c;
+            border-bottom: 1px solid #4f4f51;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .editor-actions button {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        #code {
+            flex-grow: 1;
+            padding: 15px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border: none;
+            resize: none;
+            font-family: 'Consolas', 'Courier New', monospace;
+            line-height: 1.5;
+            font-size: 14px;
+            tab-size: 4;
+        }
+        
+        /* Questions Panel */
+        .questions-panel {
+            flex: 2;
+            background: #2d2d30;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #3c3c3c;
+        }
+        
+        .questions-header {
+            padding: 15px;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .questions-content {
+            padding: 20px;
+            flex-grow: 1;
+            overflow-y: auto;
+            max-height: 60vh;
+        }
+        
+        .question {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #3c3c3c;
+        }
+        
+        .question-text {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #d4d4d4;
+        }
+        
+        .options {
+            display: grid;
+            gap: 8px;
+        }
+        
+        .option {
+            padding: 8px 12px;
+            background: #3c3c3c;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .option:hover {
+            background: #4a4a4a;
+        }
+        
+        .option.correct {
+            background: #1e4620;
+            color: #a5d6a7;
+        }
+        
+        .option.incorrect {
+            background: #4a1c1d;
+            color: #f8a0a3;
+        }
+        
+        .feedback {
+            margin-top: 10px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        
+        .feedback.correct {
+            background: #1e4620;
+            color: #a5d6a7;
+            display: block;
+        }
+        
+        .feedback.incorrect {
+            background: #4a1c1d;
+            color: #f8a0a3;
+            display: block;
+        }
+        
+        .progress-container {
+            padding: 15px;
+            background: #3c3c3c;
+            border-top: 1px solid #4f4f51;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .progress-text {
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .nav-buttons button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .nav-buttons button:disabled {
+            background: #4a4a4a;
+            cursor: not-allowed;
+        }
+        
+        /* Copy Code Section */
+        .copy-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #2d2d30;
+            border-radius: 8px;
+            border: 1px solid #3c3c3c;
+        }
+        
+        .copy-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        #copy-all-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        #copy-all-btn:hover {
+            background: #3ba39d;
+        }
+        
+        #full-code {
+            width: 100%;
+            height: 200px;
+            padding: 15px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border: 1px solid #3c3c3c;
+            border-radius: 4px;
+            resize: vertical;
+            font-family: 'Consolas', 'Courier New', monospace;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .editor-container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                position: absolute;
+                height: 100%;
+                z-index: 100;
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                width: 100vw;
+            }
+            
+            .toggle-sidebar {
+                display: block;
+            }
+        }
+        
+        /* Code highlighting */
+        .keyword {
+            color: #569cd6;
+        }
+        
+        .function {
+            color: #dcdcaa;
+        }
+        
+        .string {
+            color: #ce9178;
+        }
+        
+        .comment {
+            color: #6a9955;
+        }
+        
+        .variable {
+            color: #9cdcfe;
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #2d2d30;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #4a4a4a;
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #5a5a5a;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar avec structure de projet -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-code"></i> Code<span>IA</span></h2>
+                <p>Structure du Projet</p>
+            </div>
+            
+            <div class="project-structure">
+                <div class="folder active">
+                    <div class="folder-title">
+                        <i class="fas fa-folder"></i> backend
+                    </div>
+                    <div class="folder-items">
+                        <div class="file"><i class="fas fa-file-code"></i> server.js</div>
+                        <div class="folder">
+                            <div class="folder-title">
+                                <i class="fas fa-folder"></i> middleware
+                            </div>
+                        </div>
+                        <div class="folder">
+                            <div class="folder-title">
+                                <i class="fas fa-folder"></i> models
+                            </div>
+                        </div>
+                        <div class="folder">
+                            <div class="folder-title">
+                                <i class="fas fa-folder"></i> routes
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="folder active">
+                    <div class="folder-title">
+                        <i class="fas fa-folder"></i> frontend
+                    </div>
+                    <div class="folder-items">
+                        <div class="file"><i class="fas fa-file-code"></i> next.config.js</div>
+                        <div class="folder">
+                            <div class="folder-title">
+                                <i class="fas fa-folder"></i> components
+                            </div>
+                        </div>
+                        <div class="folder">
+                            <div class="folder-title">
+                                <i class="fas fa-folder"></i> contexts
+                            </div>
+                        </div>
+                        <div class="folder">
+                            <div class="folder-title">
+                                <i class="fas fa-folder"></i> pages
+                            </div>
+                        </div>
+                        <div class="folder">
+                            <div class="folder-title">
+                                <i class="fas fa-folder"></i> styles
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="file"><i class="fas fa-file-alt"></i> README.md</div>
+            </div>
+        </div>
+        
+        <!-- Contenu principal -->
+        <div class="main-content">
+            <header>
+                <button class="toggle-sidebar" id="toggle-sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1>Assistant de Programmation</h1>
+                <div class="user-actions">
+                    <button id="save-btn">
+                        <i class="fas fa-save"></i> Sauvegarder
+                    </button>
+                    <button id="run-btn">
+                        <i class="fas fa-play"></i> Exécuter
+                    </button>
+                </div>
+            </header>
+            
+            <div class="editor-container">
+                <!-- Éditeur de code -->
+                <div class="code-editor">
+                    <div class="editor-header">
+                        <h3><i class="fas fa-file-code"></i> server.js</h3>
+                        <div class="editor-actions">
+                            <button id="format-btn">
+                                <i class="fas fa-indent"></i> Formatter
+                            </button>
+                        </div>
+                    </div>
+                    <textarea id="code" placeholder="Commencez à coder ici..." autofocus>// Importation des modules nécessaires
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const path = require('path');
+require('dotenv').config();
+
+// Initialisation de l'application Express
+const app = express();
+const port = process.env.PORT || 3000;
+
+// Middleware pour parser le JSON
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Middleware CORS pour autoriser les requêtes cross-origin
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3001',
+  credentials: true
+}));
+
+// Connexion à la base de données MongoDB
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/codeia', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => {
+  console.log('Connecté à la base de données MongoDB');
+})
+.catch((err) => {
+  console.error('Erreur de connexion à MongoDB:', err);
+});
+
+// Modèle de données pour les questions
+const questionSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  description: {
+    type: String,
+    required: true
+  },
+  category: {
+    type: String,
+    required: true,
+    enum: ['JavaScript', 'Node.js', 'React', 'Express', 'MongoDB']
+  },
+  difficulty: {
+    type: String,
+    required: true,
+    enum: ['Débutant', 'Intermédiaire', 'Avancé']
+  },
+  codeExample: {
+    type: String,
+    default: ''
+  },
+  correctAnswer: {
+    type: String,
+    required: true
+  },
+  options: [{
+    id: Number,
+    text: String
+  }],
+  explanation: {
+    type: String,
+    required: true
+  }
+}, {
+  timestamps: true
+});
+
+// Création du modèle Question
+const Question = mongoose.model('Question', questionSchema);
+
+// Middleware de journalisation des requêtes
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  next();
+});
+
+// Routes de l'API
+
+// Route pour récupérer toutes les questions
+app.get('/api/questions', async (req, res) => {
+  try {
+    const { category, difficulty, limit = 10 } = req.query;
+    
+    // Construction du filtre
+    const filter = {};
+    if (category) filter.category = category;
+    if (difficulty) filter.difficulty = difficulty;
+    
+    // Récupération des questions
+    const questions = await Question.find(filter)
+      .limit(parseInt(limit))
+      .select('-correctAnswer')
+      .sort({ createdAt: -1 });
+    
+    res.json({
+      success: true,
+      count: questions.length,
+      data: questions
+    });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des questions:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur serveur lors de la récupération des questions'
+    });
+  }
+});
+
+// Route pour créer une nouvelle question
+app.post('/api/questions', async (req, res) => {
+  try {
+    const {
+      title,
+      description,
+      category,
+      difficulty,
+      codeExample,
+      correctAnswer,
+      options,
+      explanation
+    } = req.body;
+    
+    // Validation des données requises
+    if (!title || !description || !category || !difficulty || !correctAnswer || !explanation) {
+      return res.status(400).json({
+        success: false,
+        message: 'Tous les champs obligatoires doivent être remplis'
+      });
+    }
+    
+    // Création de la question
+    const question = new Question({
+      title,
+      description,
+      category,
+      difficulty,
+      codeExample: codeExample || '',
+      correctAnswer,
+      options: options || [],
+      explanation
+    });
+    
+    // Sauvegarde de la question
+    await question.save();
+    
+    res.status(201).json({
+      success: true,
+      message: 'Question créée avec succès',
+      data: question
+    });
+  } catch (error) {
+    console.error('Erreur lors de la création de la question:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur serveur lors de la création de la question'
+    });
+  }
+});
+
+// Route pour vérifier une réponse
+app.post('/api/questions/:id/verify', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { answer } = req.body;
+    
+    if (!answer) {
+      return res.status(400).json({
+        success: false,
+        message: 'Une réponse est requise'
+      });
+    }
+    
+    // Recherche de la question
+    const question = await Question.findById(id);
+    
+    if (!question) {
+      return res.status(404).json({
+        success: false,
+        message: 'Question non trouvée'
+      });
+    }
+    
+    // Vérification de la réponse
+    const isCorrect = answer === question.correctAnswer;
+    
+    res.json({
+      success: true,
+      isCorrect,
+      explanation: question.explanation
+    });
+  } catch (error) {
+    console.error('Erreur lors de la vérification de la réponse:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur serveur lors de la vérification de la réponse'
+    });
+  }
+});
+
+// Route pour servir les fichiers statiques en production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../frontend/build')));
+  
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
+  });
+}
+
+// Middleware de gestion des erreurs 404
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'Route non trouvée'
+  });
+});
+
+// Middleware de gestion des erreurs globales
+app.use((err, req, res, next) => {
+  console.error('Erreur non gérée:', err);
+  res.status(500).json({
+    success: false,
+    message: 'Erreur interne du serveur'
+  });
+});
+
+// Démarrage du serveur
+app.listen(port, () => {
+  console.log(`Serveur démarré sur le port ${port}`);
+  console.log(`Environnement: ${process.env.NODE_ENV || 'development'}`);
+});
+
+// Gestion de la fermeture propre du serveur
+process.on('SIGINT', async () => {
+  console.log('\nArrêt du serveur en cours...');
+  await mongoose.connection.close();
+  console.log('Déconnecté de MongoDB');
+  process.exit(0);
+});</textarea>
+                </div>
+                
+                <!-- Panneau de questions -->
+                <div class="questions-panel">
+                    <div class="questions-header">
+                        <h3><i class="fas fa-question-circle"></i> Questions de Compréhension</h3>
+                        <span id="score">Score: 0/0</span>
+                    </div>
+                    
+                    <div class="questions-content">
+                        <div class="question" id="question1">
+                            <div class="question-text">1. Quelle est la fonction de app.use(express.json()) ?</div>
+                            <div class="options">
+                                <div class="option" data-correct="true">Parser les requêtes entrantes avec un payload JSON</div>
+                                <div class="option" data-correct="false">Servir des fichiers statiques</div>
+                                <div class="option" data-correct="false">Définir le moteur de template</div>
+                                <div class="option" data-correct="false">Gérer les sessions utilisateur</div>
+                            </div>
+                            <div class="feedback"></div>
+                        </div>
+                        
+                        <div class="question" id="question2">
+                            <div class="question-text">2. Que fait la méthode app.listen() ?</div>
+                            <div class="options">
+                                <div class="option" data-correct="false">Écoute les événements du DOM</div>
+                                <div class="option" data-correct="true">Démarre le serveur sur le port spécifié</div>
+                                <div class="option" data-correct="false">Configure les routes API</div>
+                                <div class="option" data-correct="false">Initialise la base de données</div>
+                            </div>
+                            <div class="feedback"></div>
+                        </div>
+                        
+                        <div class="question" id="question3">
+                            <div class="question-text">3. Quelle est la différence entre app.get() et app.post() ?</div>
+                            <div class="options">
+                                <div class="option" data-correct="false">app.get() est pour les pages, app.post() pour les APIs</div>
+                                <div class="option" data-correct="false">app.get() est plus sécurisé que app.post()</div>
+                                <div class="option" data-correct="true">app.get() gère les requêtes HTTP GET, app.post() gère les POST</div>
+                                <div class="option" data-correct="false">app.get() est asynchrone, app.post() est synchrone</div>
+                            </div>
+                            <div class="feedback"></div>
+                        </div>
+
+                        <div class="question" id="question4">
+                            <div class="question-text">4. À quoi sert le middleware CORS dans une application Express ?</div>
+                            <div class="options">
+                                <div class="option" data-correct="false">À compresser les réponses HTTP</div>
+                                <div class="option" data-correct="true">À autoriser les requêtes cross-origin</div>
+                                <div class="option" data-correct="false">À gérer l'authentification des utilisateurs</div>
+                                <div class="option" data-correct="false">À servir des fichiers statiques</div>
+                            </div>
+                            <div class="feedback"></div>
+                        </div>
+
+                        <div class="question" id="question5">
+                            <div class="question-text">5. Pourquoi utilise-t-on mongoose.Schema pour définir un modèle ?</div>
+                            <div class="options">
+                                <div class="option" data-correct="false">Pour créer des interfaces graphiques</div>
+                                <div class="option" data-correct="false">Pour optimiser les performances de la base de données</div>
+                                <div class="option" data-correct="true">Pour définir la structure des documents MongoDB</div>
+                                <div class="option" data-correct="false">Pour générer automatiquement du code</div>
+                            </div>
+                            <div class="feedback"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-container">
+                        <div class="progress-text">Progression: <span id="progress">0%</span></div>
+                        <div class="nav-buttons">
+                            <button id="prev-btn" disabled>
+                                <i class="fas fa-arrow-left"></i> Précédent
+                            </button>
+                            <button id="next-btn">
+                                Suivant <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section pour copier tout le code -->
+            <div class="copy-section">
+                <div class="copy-header">
+                    <h3><i class="fas fa-copy"></i> Code Complet</h3>
+                    <button id="copy-all-btn">
+                        <i class="fas fa-clipboard"></i> Copier Tout le Code
+                    </button>
+                </div>
+                <textarea id="full-code" readonly>Le code complet sera généré ici après avoir répondu aux questions...</textarea>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Gestion des dossiers dans la sidebar
+            const folderTitles = document.querySelectorAll('.folder-title');
+            folderTitles.forEach(title => {
+                title.addEventListener('click', () => {
+                    title.parentElement.classList.toggle('active');
+                });
+            });
+            
+            // Gestion de l'affichage de la sidebar sur mobile
+            const toggleSidebar = document.getElementById('toggle-sidebar');
+            const sidebar = document.getElementById('sidebar');
+            
+            toggleSidebar.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+            });
+            
+            // Gestion des questions
+            const questions = document.querySelectorAll('.question');
+            const options = document.querySelectorAll('.option');
+            const scoreElement = document.getElementById('score');
+            const progressElement = document.getElementById('progress');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const fullCodeTextarea = document.getElementById('full-code');
+            const copyAllBtn = document.getElementById('copy-all-btn');
+            
+            let currentQuestion = 0;
+            let score = 0;
+            let answered = 0;
+            const totalQuestions = questions.length;
+            
+            // Afficher la première question
+            showQuestion(currentQuestion);
+            
+            // Gestion des options de réponse
+            options.forEach(option => {
+                option.addEventListener('click', function() {
+                    if (this.parentElement.parentElement.classList.contains('answered')) {
+                        return; // Ne pas permettre de répondre plusieurs fois
+                    }
+                    
+                    const isCorrect = this.getAttribute('data-correct') === 'true';
+                    const feedback = this.parentElement.nextElementSibling;
+                    
+                    if (isCorrect) {
+                        this.classList.add('correct');
+                        feedback.textContent = 'Correct! Bonne réponse.';
+                        feedback.classList.add('correct');
+                        score++;
+                    } else {
+                        this.classList.add('incorrect');
+                        feedback.textContent = 'Incorrect. Essayez encore.';
+                        feedback.classList.add('incorrect');
+                        
+                        // Afficher la bonne réponse
+                        const correctOption = this.parentElement.querySelector('.option[data-correct="true"]');
+                        correctOption.classList.add('correct');
+                    }
+                    
+                    this.parentElement.parentElement.classList.add('answered');
+                    answered++;
+                    
+                    // Mettre à jour le score et la progression
+                    scoreElement.textContent = `Score: ${score}/${answered}`;
+                    progressElement.textContent = `${Math.round((answered / totalQuestions) * 100)}%`;
+                    
+                    // Générer le code complet quand toutes les questions sont répondues
+                    if (answered === totalQuestions) {
+                        generateFullCode();
+                        nextBtn.textContent = 'Terminer';
+                    }
+                });
+            });
+            
+            // Navigation entre les questions
+            prevBtn.addEventListener('click', () => {
+                if (currentQuestion > 0) {
+                    currentQuestion--;
+                    showQuestion(currentQuestion);
+                }
+            });
+            
+            nextBtn.addEventListener('click', () => {
+                if (currentQuestion < totalQuestions - 1) {
+                    currentQuestion++;
+                    showQuestion(currentQuestion);
+                } else if (answered === totalQuestions) {
+                    alert(`Quiz terminé! Votre score final: ${score}/${totalQuestions}`);
+                }
+            });
+            
+            function showQuestion(index) {
+                // Cacher toutes les questions
+                questions.forEach(question => {
+                    question.style.display = 'none';
+                });
+                
+                // Afficher la question courante
+                questions[index].style.display = 'block';
+                
+                // Gérer l'état des boutons de navigation
+                prevBtn.disabled = index === 0;
+                nextBtn.disabled = index === totalQuestions - 1 && answered < totalQuestions;
+            }
+            
+            // Générer le code complet
+            function generateFullCode() {
+                const codeContent = document.getElementById('code').value;
+                const scoreText = `// Score: ${score}/${totalQuestions}\n`;
+                const feedbackText = `// Feedback: ${score >= totalQuestions/2 ? 'Excellent travail!' : 'Continuez à pratiquer!'}\n\n`;
+                
+                fullCodeTextarea.value = scoreText + feedbackText + codeContent;
+            }
+            
+            // Copier tout le code
+            copyAllBtn.addEventListener('click', () => {
+                fullCodeTextarea.select();
+                document.execCommand('copy');
+                
+                // Feedback visuel
+                const originalText = copyAllBtn.innerHTML;
+                copyAllBtn.innerHTML = '<i class="fas fa-check"></i> Code Copié!';
+                
+                setTimeout(() => {
+                    copyAllBtn.innerHTML = originalText;
+                }, 2000);
+            });
+            
+            // Actions des boutons
+            document.getElementById('save-btn').addEventListener('click', () => {
+                alert('Code sauvegardé avec succès!');
+            });
+            
+            document.getElementById('run-btn').addEventListener('click', () => {
+                alert('Exécution du code...');
+            });
+            
+            document.getElementById('format-btn').addEventListener('click', () => {
+                alert('Code formaté!');
+            });
+
+            // Génération de code d'exemple étendu (plus de 1000 lignes)
+            function generateExtendedCode() {
+                const extendedCode = `// Fichier: server.js
+// Description: Serveur principal de l'application CodeIA
+// Auteur: Votre Nom
+// Date: ${new Date().toLocaleDateString()}
+
+// SECTION 1: IMPORTATIONS ET CONFIGURATION DE BASE
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const path = require('path');
+const fs = require('fs');
+const https = require('https');
+const http = require('http');
+const helmet = require('helmet');
+const compression = require('compression');
+const rateLimit = require('express-rate-limit');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const hpp = require('hpp');
+const cookieParser = require('cookie-parser');
+const session = require('express-session');
+const MongoStore = require('connect-mongo');
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
+const multer = require('multer');
+const { v4: uuidv4 } = require('uuid');
+const axios = require('axios');
+const WebSocket = require('ws');
+const redis = require('redis');
+const cluster = require('cluster');
+const os = require('os');
+
+// Configuration de l'environnement
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+
+// Initialisation de l'application Express
+const app = express();
+
+// Configuration du port
+const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || 'localhost';
+
+// SECTION 2: MIDDLEWARES DE SÉCURITÉ
+
+// Helmet pour la sécurité des en-têtes HTTP
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com"],
+            imgSrc: ["'self'", "data:", "https:"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+        }
+    }
+}));
+
+// Protection contre les attaques XSS
+app.use(xss());
+
+// Protection contre la pollution des paramètres HTTP
+app.use(hpp());
+
+// Sanitization des données MongoDB
+app.use(mongoSanitize());
+
+// Limitation du taux de requêtes
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // limite chaque IP à 100 requêtes par fenêtre
+    message: 'Trop de requêtes depuis cette IP, veuillez réessayer plus tard.'
+});
+app.use('/api/', limiter);
+
+// Compression des réponses
+app.use(compression());
+
+// SECTION 3: MIDDLEWARES GÉNÉRAUX
+
+// Analyseur de corps de requête
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Analyseur de cookies
+app.use(cookieParser());
+
+// Middleware CORS
+app.use(cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:3001',
+    credentials: true
+}));
+
+// Servir les fichiers statiques
+app.use(express.static(path.join(__dirname, 'public'), { maxAge: '7d' }));
+
+// Journalisation des requêtes
+app.use((req, res, next) => {
+    console.log(\`\${new Date().toISOString()} - \${req.method} \${req.originalUrl} - \${req.ip}\`);
+    next();
+});
+
+// SECTION 4: CONFIGURATION DE LA BASE DE DONNÉES
+
+// Connexion à MongoDB
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/codeia';
+const mongooseOptions = {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
+};
+
+mongoose.connect(MONGODB_URI, mongooseOptions)
+.then(() => {
+    console.log('Connecté à MongoDB avec succès');
+})
+.catch((err) => {
+    console.error('Erreur de connexion à MongoDB:', err);
+    process.exit(1);
+});
+
+// SECTION 5: MODÈLES DE DONNÉES
+
+// Schéma et modèle Utilisateur
+const userSchema = new mongoose.Schema({
+    username: {
+        type: String,
+        required: true,
+        unique: true,
+        trim: true,
+        minlength: 3,
+        maxlength: 30
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+        lowercase: true,
+        match: [/^\\w+([.-]?\\w+)*@\\w+([.-]?\\w+)*(\\.\\w{2,3})+$/, 'Adresse email invalide']
+    },
+    password: {
+        type: String,
+        required: true,
+        minlength: 6
+    },
+    role: {
+        type: String,
+        enum: ['user', 'admin', 'moderator'],
+        default: 'user'
+    },
+    profile: {
+        firstName: String,
+        lastName: String,
+        avatar: String,
+        bio: String,
+        website: String,
+        location: String
+    },
+    preferences: {
+        theme: {
+            type: String,
+            enum: ['light', 'dark', 'auto'],
+            default: 'auto'
+        },
+        notifications: {
+            email: { type: Boolean, default: true },
+            push: { type: Boolean, default: false }
+        }
+    },
+    stats: {
+        questionsAnswered: { type: Number, default: 0 },
+        correctAnswers: { type: Number, default: 0 },
+        totalScore: { type: Number, default: 0 },
+        streak: { type: Number, default: 0 }
+    },
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    verificationToken: String,
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
+    lastLogin: Date,
+    loginCount: { type: Number, default: 0 }
+}, {
+    timestamps: true
+});
+
+// Index pour améliorer les performances
+userSchema.index({ email: 1 });
+userSchema.index({ username: 1 });
+userSchema.index({ 'stats.totalScore': -1 });
+
+// Méthodes du modèle Utilisateur
+userSchema.methods.comparePassword = async function(candidatePassword) {
+    return await bcrypt.compare(candidatePassword, this.password);
+};
+
+userSchema.methods.generateJWT = function() {
+    return jwt.sign(
+        {
+            userId: this._id,
+            username: this.username,
+            email: this.email,
+            role: this.role
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+    );
+};
+
+// Middleware de pré-sauvegarde pour hacher le mot de passe
+userSchema.pre('save', async function(next) {
+    if (!this.isModified('password')) return next();
+    
+    try {
+        const salt = await bcrypt.genSalt(12);
+        this.password = await bcrypt.hash(this.password, salt);
+        next();
+    } catch (error) {
+        next(error);
+    }
+});
+
+const User = mongoose.model('User', userSchema);
+
+// Schéma et modèle Question (étendu)
+const questionSchema = new mongoose.Schema({
+    title: {
+        type: String,
+        required: true,
+        trim: true,
+        maxlength: 200
+    },
+    description: {
+        type: String,
+        required: true
+    },
+    detailedExplanation: {
+        type: String,
+        default: ''
+    },
+    category: {
+        type: String,
+        required: true,
+        enum: ['JavaScript', 'Node.js', 'React', 'Express', 'MongoDB', 'HTML', 'CSS', 'Algorithms', 'Data Structures']
+    },
+    subcategory: {
+        type: String,
+        trim: true
+    },
+    difficulty: {
+        type: String,
+        required: true,
+        enum: ['Débutant', 'Intermédiaire', 'Avancé', 'Expert']
+    },
+    tags: [{
+        type: String,
+        trim: true
+    }],
+    codeExample: {
+        type: String,
+        default: ''
+    },
+    correctAnswer: {
+        type: String,
+        required: true
+    },
+    options: [{
+        id: {
+            type: Number,
+            required: true
+        },
+        text: {
+            type: String,
+            required: true
+        },
+        explanation: {
+            type: String,
+            default: ''
+        }
+    }],
+    explanation: {
+        type: String,
+        required: true
+    },
+    author: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    references: [{
+        title: String,
+        url: String
+    }],
+    relatedQuestions: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Question'
+    }],
+    stats: {
+        timesAsked: { type: Number, default: 0 },
+        correctAnswers: { type: Number, default: 0 },
+        incorrectAnswers: { type: Number, default: 0 },
+        averageTime: { type: Number, default: 0 },
+        difficultyRating: { type: Number, default: 0 }
+    },
+    isPublished: {
+        type: Boolean,
+        default: false
+    },
+    publishedAt: Date,
+    lastUpdated: Date,
+    version: {
+        type: Number,
+        default: 1
+    }
+}, {
+    timestamps: true
+});
+
+// Index pour les recherches et les agrégations
+questionSchema.index({ category: 1, difficulty: 1 });
+questionSchema.index({ tags: 1 });
+questionSchema.index({ isPublished: 1, category: 1 });
+questionSchema.index({ author: 1 });
+questionSchema.index({ 'stats.timesAsked': -1 });
+
+const Question = mongoose.model('Question', questionSchema);
+
+// Schéma et modèle Quiz
+const quizSchema = new mongoose.Schema({
+    title: {
+        type: String,
+        required: true,
+        trim: true,
+        maxlength: 100
+    },
+    description: {
+        type: String,
+        default: ''
+    },
+    categories: [{
+        type: String,
+        required: true
+    }],
+    difficulty: {
+        type: String,
+        required: true,
+        enum: ['Débutant', 'Intermédiaire', 'Avancé', 'Mixte']
+    },
+    questions: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Question',
+        required: true
+    }],
+    timeLimit: {
+        type: Number, // en secondes
+        default: 0 // 0 signifie pas de limite de temps
+    },
+    author: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    isPublic: {
+        type: Boolean,
+        default: false
+    },
+    stats: {
+        timesTaken: { type: Number, default: 0 },
+        averageScore: { type: Number, default: 0 },
+        bestScore: { type: Number, default: 0 },
+        bestUser: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        }
+    },
+    settings: {
+        shuffleQuestions: { type: Boolean, default: true },
+        shuffleOptions: { type: Boolean, default: true },
+        showCorrectAnswers: { type: Boolean, default: true },
+        allowRetries: { type: Boolean, default: false }
+    }
+}, {
+    timestamps: true
+});
+
+const Quiz = mongoose.model('Quiz', quizSchema);
+
+// Schéma et modèle Session de Quiz
+const quizSessionSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+    quiz: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Quiz',
+        required: true
+    },
+    answers: [{
+        question: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Question',
+            required: true
+        },
+        selectedOption: {
+            type: String,
+            required: true
+        },
+        isCorrect: {
+            type: Boolean,
+            required: true
+        },
+        timeSpent: {
+            type: Number, // en secondes
+            default: 0
+        }
+    }],
+    score: {
+        type: Number,
+        default: 0
+    },
+    totalQuestions: {
+        type: Number,
+        required: true
+    },
+    correctAnswers: {
+        type: Number,
+        default: 0
+    },
+    startTime: {
+        type: Date,
+        default: Date.now
+    },
+    endTime: Date,
+    timeSpent: {
+        type: Number, // en secondes
+        default: 0
+    },
+    completed: {
+        type: Boolean,
+        default: false
+    },
+    abandoned: {
+        type: Boolean,
+        default: false
+    }
+}, {
+    timestamps: true
+});
+
+// Index pour les analyses de performance
+quizSessionSchema.index({ user: 1, quiz: 1 });
+quizSessionSchema.index({ completed: 1, score: -1 });
+quizSessionSchema.index({ quiz: 1, score: -1 });
+
+const QuizSession = mongoose.model('QuizSession', quizSessionSchema);
+
+// SECTION 6: CONFIGURATION DE L'AUTHENTIFICATION
+
+// Configuration de Passport.js
+passport.use(new LocalStrategy(
+    async (username, password, done) => {
+        try {
+            const user = await User.findOne({ 
+                $or: [{ username: username }, { email: username }] 
+            });
+            
+            if (!user) {
+                return done(null, false, { message: 'Utilisateur non trouvé' });
+            }
+            
+            const isMatch = await user.comparePassword(password);
+            
+            if (!isMatch) {
+                return done(null, false, { message: 'Mot de passe incorrect' });
+            }
+            
+            return done(null, user);
+        } catch (error) {
+            return done(error);
+        }
+    }
+));
+
+passport.serializeUser((user, done) => {
+    done(null, user.id);
+});
+
+passport.deserializeUser(async (id, done) => {
+    try {
+        const user = await User.findById(id);
+        done(null, user);
+    } catch (error) {
+        done(error);
+    }
+});
+
+// Configuration des sessions
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'codeia-super-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    store: MongoStore.create({
+        mongoUrl: MONGODB_URI,
+        ttl: 14 * 24 * 60 * 60 // 14 jours
+    }),
+    cookie: {
+        maxAge: 14 * 24 * 60 * 60 * 1000, // 14 jours
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax'
+    }
+}));
+
+// Initialisation de Passport
+app.use(passport.initialize());
+app.use(passport.session());
+
+// SECTION 7: MIDDLEWARES PERSONNALISÉS
+
+// Middleware d'authentification
+const authenticate = (req, res, next) => {
+    if (req.isAuthenticated()) {
+        return next();
+    }
+    
+    // Vérifier le token JWT pour les API
+    const token = req.header('Authorization')?.replace('Bearer ', '');
+    
+    if (token) {
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            req.user = decoded;
+            return next();
+        } catch (error) {
+            // Le token est invalide ou expiré
+        }
+    }
+    
+    res.status(401).json({
+        success: false,
+        message: 'Accès non autorisé. Veuillez vous connecter.'
+    });
+};
+
+// Middleware de vérification de rôle
+const requireRole = (roles) => {
+    return (req, res, next) => {
+        if (!req.user) {
+            return res.status(401).json({
+                success: false,
+                message: 'Accès non autorisé'
+            });
+        }
+        
+        if (!roles.includes(req.user.role)) {
+            return res.status(403).json({
+                success: false,
+                message: 'Permissions insuffisantes'
+            });
+        }
+        
+        next();
+    };
+};
+
+// Middleware de validation des données
+const validate = (schema) => {
+    return (req, res, next) => {
+        const { error } = schema.validate(req.body);
+        
+        if (error) {
+            return res.status(400).json({
+                success: false,
+                message: error.details[0].message
+            });
+        }
+        
+        next();
+    };
+};
+
+// SECTION 8: ROUTES DE L'API
+
+// Routes d'authentification
+app.post('/api/auth/register', async (req, res) => {
+    try {
+        const { username, email, password } = req.body;
+        
+        // Vérifier si l'utilisateur existe déjà
+        const existingUser = await User.findOne({
+            $or: [{ username }, { email }]
+        });
+        
+        if (existingUser) {
+            return res.status(400).json({
+                success: false,
+                message: 'Un utilisateur avec ce nom ou email existe déjà'
+            });
+        }
+        
+        // Créer un nouvel utilisateur
+        const user = new User({
+            username,
+            email,
+            password
+        });
+        
+        await user.save();
+        
+        // Générer un token JWT
+        const token = user.generateJWT();
+        
+        res.status(201).json({
+            success: true,
+            message: 'Utilisateur créé avec succès',
+            data: {
+                user: {
+                    id: user._id,
+                    username: user.username,
+                    email: user.email,
+                    role: user.role
+                },
+                token
+            }
+        });
+    } catch (error) {
+        console.error('Erreur lors de l\'inscription:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erreur serveur lors de l\'inscription'
+        });
+    }
+});
+
+app.post('/api/auth/login', (req, res, next) => {
+    passport.authenticate('local', (err, user, info) => {
+        if (err) {
+            return next(err);
+        }
+        
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: info.message || 'Échec de l\'authentification'
+            });
+        }
+        
+        req.logIn(user, (err) => {
+            if (err) {
+                return next(err);
+            }
+            
+            // Mettre à jour les statistiques de connexion
+            user.loginCount += 1;
+            user.lastLogin = new Date();
+            user.save();
+            
+            // Générer un token JWT
+            const token = user.generateJWT();
+            
+            return res.json({
+                success: true,
+                message: 'Connexion réussie',
+                data: {
+                    user: {
+                        id: user._id,
+                        username: user.username,
+                        email: user.email,
+                        role: user.role
+                    },
+                    token
+                }
+            });
+        });
+    })(req, res, next);
+});
+
+app.post('/api/auth/logout', (req, res) => {
+    req.logout(() => {
+        res.json({
+            success: true,
+            message: 'Déconnexion réussie'
+        });
+    });
+});
+
+app.get('/api/auth/me', authenticate, (req, res) => {
+    res.json({
+        success: true,
+        data: {
+            user: req.user
+        }
+    });
+});
+
+// Routes pour les questions
+app.get('/api/questions', async (req, res) => {
+    try {
+        const { 
+            category, 
+            difficulty, 
+            tags, 
+            limit = 10, 
+            page = 1,
+            search 
+        } = req.query;
+        
+        // Construction du filtre
+        const filter = { isPublished: true };
+        
+        if (category) filter.category = category;
+        if (difficulty) filter.difficulty = difficulty;
+        
+        if (tags) {
+            filter.tags = { $in: Array.isArray(tags) ? tags : [tags] };
+        }
+        
+        if (search) {
+            filter.$text = { $search: search };
+        }
+        
+        // Options de pagination
+        const options = {
+            limit: parseInt(limit),
+            skip: (parseInt(page) - 1) * parseInt(limit),
+            sort: { createdAt: -1 }
+        };
+        
+        // Récupération des questions
+        const questions = await Question.find(filter, '-correctAnswer', options)
+            .populate('author', 'username profile')
+            .populate('relatedQuestions', 'title difficulty');
+        
+        // Nombre total de questions pour la pagination
+        const total = await Question.countDocuments(filter);
+        
+        res.json({
+            success: true,
+            data: questions,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        console.error('Erreur lors de la récupération des questions:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erreur serveur lors de la récupération des questions'
+        });
+    }
+});
+
+app.get('/api/questions/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const question = await Question.findById(id)
+            .populate('author', 'username profile')
+            .populate('relatedQuestions', 'title difficulty category');
+        
+        if (!question) {
+            return res.status(404).json({
+                success: false,
+                message: 'Question non trouvée'
+            });
+        }
+        
+        // Ne pas renvoyer la réponse correcte si l'utilisateur n'est pas authentifié
+        // ou s'il ne s'agit pas de l'auteur ou d'un administrateur
+        const canSeeAnswer = req.user && 
+            (req.user.role === 'admin' || 
+             req.user.role === 'moderator' || 
+             question.author._id.toString() === req.user.userId);
+        
+        if (!canSeeAnswer) {
+            question.correctAnswer = undefined;
+        }
+        
+        res.json({
+            success: true,
+            data: question
+        });
+    } catch (error) {
+        console.error('Erreur lors de la récupération de la question:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erreur serveur lors de la récupération de la question'
+        });
+    }
+});
+
+app.post('/api/questions', authenticate, requireRole(['admin', 'moderator']), async (req, res) => {
+    try {
+        const {
+            title,
+            description,
+            detailedExplanation,
+            category,
+            subcategory,
+            difficulty,
+            tags,
+            codeExample,
+            correctAnswer,
+            options,
+            explanation,
+            references,
+            relatedQuestions
+        } = req.body;
+        
+        // Validation des données requises
+        if (!title || !description || !category || !difficulty || !correctAnswer || !explanation) {
+            return res.status(400).json({
+                success: false,
+                message: 'Tous les champs obligatoires doivent être remplis'
+            });
+        }
+        
+        // Validation des options
+        if (!options || options.length < 2) {
+            return res.status(400).json({
+                success: false,
+                message: 'Au moins deux options sont requises'
+            });
+        }
+        
+        // Vérifier que correctAnswer correspond à l'une des options
+        const optionIds = options.map(opt => opt.id.toString());
+        if (!optionIds.includes(correctAnswer)) {
+            return res.status(400).json({
+                success: false,
+                message: 'La réponse correcte doit correspondre à l\'une des options'
+            });
+        }
+        
+        // Création de la question
+        const question = new Question({
+            title,
+            description,
+            detailedExplanation: detailedExplanation || '',
+            category,
+            subcategory: subcategory || '',
+            difficulty,
+            tags: tags || [],
+            codeExample: codeExample || '',
+            correctAnswer,
+            options,
+            explanation,
+            author: req.user.userId,
+            references: references || [],
+            relatedQuestions: relatedQuestions || [],
+            isPublished: req.user.role === 'admin' // Les modérateurs doivent faire approuver
+        });
+        
+        // Sauvegarde de la question
+        await question.save();
+        
+        res.status(201).json({
+            success: true,
+            message: 'Question créée avec succès',
+            data: question
+        });
+    } catch (error) {
+        console.error('Erreur lors de la création de la question:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erreur serveur lors de la création de la question'
+        });
+    }
+});
+
+app.put('/api/questions/:id', authenticate, requireRole(['admin', 'moderator']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const question = await Question.findById(id);
+        
+        if (!question) {
+            return res.status(404).json({
+                success: false,
+                message: 'Question non trouvée'
+            });
+        }
+        
+        // Vérifier les permissions
+        if (req.user.role !== 'admin' && question.author.toString() !== req.user.userId) {
+            return res.status(403).json({
+                success: false,
+                message: 'Vous n\'êtes pas autorisé à modifier cette question'
+            });
+        }
+        
+        // Mise à jour de la question
+        const updatedQuestion = await Question.findByIdAndUpdate(
+            id,
+            { 
+                ...req.body,
+                lastUpdated: new Date(),
+                $inc: { version: 1 }
+            },
+            { new: true, runValidators: true }
+        );
+        
+        res.json({
+            success: true,
+            message: 'Question mise à jour avec succès',
+            data: updatedQuestion
+        });
+    } catch (error) {
+        console.error('Erreur lors de la mise à jour de la question:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erreur serveur lors de la mise à jour de la question'
+        });
+    }
+});
+
+app.delete('/api/questions/:id', authenticate, requireRole(['admin']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const question = await Question.findById(id);
+        
+        if (!question) {
+            return res.status(404).json({
+                success: false,
+                message: 'Question non trouvée'
+            });
+        }
+        
+        await Question.findByIdAndDelete(id);
+        
+        res.json({
+            success: true,
+            message: 'Question supprimée avec succès'
+        });
+    } catch (error) {
+        console.error('Erreur lors de la suppression de la question:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erreur serveur lors de la suppression de la question'
+        });
+    }
+});
+
+app.post('/api/questions/:id/verify', authenticate, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { answer, timeSpent = 0 } = req.body;
+        
+        if (!answer) {
+            return res.status(400).json({
+                success: false,
+                message: 'Une réponse est requise'
+            });
+        }
+        
+        // Recherche de la question
+        const question = await Question.findById(id);
+        
+        if (!question) {
+            return res.status(404).json({
+                success: false,
+                message: 'Question non trouvée'
+            });
+        }
+        
+        // Vérification de la réponse
+        const isCorrect = answer === question.correctAnswer;
+        
+        // Mise à jour des statistiques de la question
+        question.stats.timesAsked += 1;
+        
+        if (isCorrect) {
+            question.stats.correctAnswers += 1;
+        } else {
+            question.stats.incorrectAnswers += 1;
+        }
+        
+        // Calcul du temps moyen
+        const totalTime = question.stats.averageTime * (question.stats.timesAsked - 1) + timeSpent;
+        question.stats.averageTime = totalTime / question.stats.timesAsked;
+        
+        await question.save();
+        
+        // Mise à jour des statistiques de l'utilisateur
+        const user = await User.findById(req.user.userId);
+        
+        if (user) {
+            user.stats.questionsAnswered += 1;
+            
+            if (isCorrect) {
+                user.stats.correctAnswers += 1;
+                user.stats.totalScore += 10; // 10 points par bonne réponse
+                
+                // Mise à jour de la série de bonnes réponses
+                user.stats.streak += 1;
+            } else {
+                user.stats.streak = 0; // Réinitialiser la série
+            }
+            
+            await user.save();
+        }
+        
+        res.json({
+            success: true,
+            isCorrect,
+            explanation: question.explanation,
+            stats: {
+                questionsAnswered: user.stats.questionsAnswered,
+                correctAnswers: user.stats.correctAnswers,
+                totalScore: user.stats.totalScore,
+                streak: user.stats.streak
+            }
+        });
+    } catch (error) {
+        console.error('Erreur lors de la vérification de la réponse:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erreur serveur lors de la vérification de la réponse'
+        });
+    }
+});
+
+// Routes pour les quiz
+app.get('/api/quizzes', async (req, res) => {
+    try {
+        const { 
+            category, 
+            difficulty, 
+            author, 
+            limit = 10, 
+            page = 1,
+            search 
+        } = req.query;
+        
+        // Construction du filtre
+        const filter = { isPublic: true };
+        
+        if (category) filter.categories = category;
+        if (difficulty && difficulty !== 'Mixte') filter.difficulty = difficulty;
+        if (author) filter.author = author;
+        
+        if (search) {
+            filter.$text = { $search: search };
+        }
+        
+        // Options de pagination
+        const options = {
+            limit: parseInt(limit),
+            skip: (parseInt(page) - 1) * parseInt(limit),
+            sort: { createdAt: -1 },
+            populate: 'author questions'
+        };
+        
+        // Récupération des quiz
+        const quizzes = await Quiz.find(filter, null, options)
+            .populate('author', 'username profile')
+            .populate('questions', 'title category difficulty');
+        
+        // Nombre total de quiz pour la pagination
+        const total = await Quiz.countDocuments(filter);
+        
+        res.json({
+            success: true,
+            data: quizzes,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        console.error('Erreur lors de la récupération des quiz:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erreur serveur lors de la récupération des quiz'
+        });
+    }
+});
+
+app.get('/api/quizzes/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const quiz = await Quiz.findById(id)
+            .populate('author', 'username profile')
+            .populate('questions', '-correctAnswer');
+        
+        if (!quiz) {
+            return res.status(404).json({
+                success: false,
+                message: 'Quiz non trouvé'
+            });
+        }
+        
+        // Mélanger les questions et options si demandé
+        let questions = quiz.questions;
+        
+        if (quiz.settings.shuffleQuestions) {
+            questions = questions.sort(() => Math.random() - 0.5);
+        }
+        
+        if (quiz.settings.shuffleOptions) {
+            questions = questions.map(q => {
+                const options = [...q.options].sort(() => Math.random() - 0.5);
+                return { ...q.toObject(), options };
+            });
+        }
+        
+        res.json({
+            success: true,
+            data: {
+                ...quiz.toObject(),
+                questions
+            }
+        });
+    } catch (error) {
+        console.error('Erreur lors de la récupération du quiz:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erreur serveur lors de la récupération du quiz'
+        });
+    }
+});
+
+app.post('/api/quizzes', authenticate, async (req, res) => {
+    try {
+        const {
+            title,
+            description,
+            categories,
+            difficulty,
+            questions,
+            timeLimit,
+            settings
+        } = req.body;
+        
+        // Validation des données requises
+        if (!title || !categories || !difficulty || !questions || questions.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Tous les champs obligatoires doivent être remplis'
+            });
+        }
+        
+        // Vérifier que les questions existent
+        const existingQuestions = await Question.find({
+            _id: { $in: questions },
+            isPublished: true
+        });
+        
+        if (existingQuestions.length !== questions.length) {
+            return res.status(400).json({
+                success: false,
+                message: 'Une ou plusieurs questions sont invalides ou non publiées'
+            });
+        }
+        
+        // Création du quiz
+        const quiz = new Quiz({
+            title,
+            description: description || '',
+            categories,
+            difficulty,
+            questions,
+            timeLimit: timeLimit || 0,
+            author: req.user.userId,
+            isPublic: req.user.role === 'admin', // Seuls les admins peuvent créer des quiz publics
+            settings: settings || {
+                shuffleQuestions: true,
+                shuffleOptions: true,
+                showCorrectAnswers: true,
+                allowRetries: false
+            }
+        });
+        
+        // Sauvegarde du quiz
+        await quiz.save();
+        
+        res.status(201).json({
+            success: true,
+            message: 'Quiz créé avec succès',
+            data: quiz
+        });
+    } catch (error) {
+        console.error('Erreur lors de la création du quiz:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erreur serveur lors de la création du quiz'
+        });
+    }
+});
+
+app.post('/api/quizzes/:id/start', authenticate, async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const quiz = await Quiz.findById(id).populate('questions');
+        
+        if (!quiz) {
+            return res.status(404).json({
+                success: false,
+                message: 'Quiz non trouvé'
+            });
+        }
+        
+        // Vérifier si l'utilisateur a déjà terminé ce quiz et si les réessais sont autorisés
+        if (!quiz.settings.allowRetries) {
+            const existingSession = await QuizSession.findOne({
+                user: req.user.userId,
+                quiz: id,
+                completed: true
+            });
+            
+            if (existingSession) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Vous avez déjà terminé ce quiz et les réessais ne sont pas autorisés'
+                });
+            }
+        }
+        
+        // Créer une nouvelle session de quiz
+        const quizSession = new QuizSession({
+            user: req.user.userId,
+            quiz: id,
+            totalQuestions: quiz.questions.length,
+            startTime: new Date()
+        });
+        
+        await quizSession.save();
+        
+        res.json({
+            success: true,
+            message: 'Session de quiz démarrée',
+            data: {
+                sessionId: quizSession._id,
+                quiz: {
+                    title: quiz.title,
+                    description: quiz.description,
+                    timeLimit: quiz.timeLimit,
+                    totalQuestions: quiz.questions.length
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Erreur lors du démarrage du quiz:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erreur serveur lors du démarrage du quiz'
+        });
+    }
+});
+
+app.post('/api/quiz-sessions/:id/answer', authenticate, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { questionId, selectedOption, timeSpent = 0 } = req.body;
+        
+        const session = await QuizSession.findById(id);
+        
+        if (!session) {
+            return res.status(404).json({
+                success: false,
+                message: 'Session de quiz non trouvée'
+            });
+        }
+        
+        // Vérifier que la session appartient à l'utilisateur
+        if (session.user.toString() !== req.user.userId) {
+            return res.status(403).json({
+                success: false,
+                message: 'Accès non autorisé à cette session'
+            });
+        }
+        
+        // Vérifier que la session n'est pas terminée
+        if (session.completed) {
+            return res.status(400).json({
+                success: false,
+                message: 'Cette session de quiz est déjà terminée'
+            });
+        }
+        
+        // Vérifier la réponse
+        const question = await Question.findById(questionId);
+        const isCorrect = selectedOption === question.correctAnswer;
+        
+        // Ajouter la réponse à la session
+        session.answers.push({
+            question: questionId,
+            selectedOption,
+            isCorrect,
+            timeSpent
+        });
+        
+        // Mettre à jour le score
+        if (isCorrect) {
+            session.correctAnswers += 1;
+            session.score += 10; // 10 points par bonne réponse
+        }
+        
+        await session.save();
+        
+        res.json({
+            success: true,
+            isCorrect,
+            explanation: question.explanation,
+            session: {
+                score: session.score,
+                correctAnswers: session.correctAnswers,
+                totalQuestions: session.totalQuestions,
+                answered: session.answers.length
+            }
+        });
+    } catch (error) {
+        console.error('Erreur lors de l\'enregistrement de la réponse:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erreur serveur lors de l\'enregistrement de la réponse'
+        });
+    }
+});
+
+app.post('/api/quiz-sessions/:id/complete', authenticate, async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const session = await QuizSession.findById(id);
+        
+        if (!session) {
+            return res.status(404).json({
+                success: false,
+                message: 'Session de quiz non trouvée'
+            });
+        }
+        
+        // Vérifier que la session appartient à l'utilisateur
+        if (session.user.toString() !== req.user.userId) {
+            return res.status(403).json({
+                success: false,
+                message: 'Accès non autorisé à cette session'
+            });
+        }
+        
+        // Vérifier que la session n'est pas déjà terminée
+        if (session.completed) {
+            return res.status(400).json({
+                success: false,
+                message: 'Cette session de quiz est déjà terminée'
+            });
+        }
+        
+        // Marquer la session comme terminée
+        session.endTime = new Date();
+        session.timeSpent = Math.floor((session.endTime - session.startTime) / 1000);
+        session.completed = true;
+        
+        await session.save();
+        
+        // Mettre à jour les statistiques du quiz
+        const quiz = await Quiz.findById(session.quiz);
+        
+        if (quiz) {
+            quiz.stats.timesTaken += 1;
+            
+            // Calculer la moyenne des scores
+            const totalScore = quiz.stats.averageScore * (quiz.stats.timesTaken - 1) + session.score;
+            quiz.stats.averageScore = totalScore / quiz.stats.timesTaken;
+            
+            // Mettre à jour le meilleur score
+            if (session.score > quiz.stats.bestScore) {
+                quiz.stats.bestScore = session.score;
+                quiz.stats.bestUser = req.user.userId;
+            }
+            
+            await quiz.save();
+        }
+        
+        // Mettre à jour les statistiques de l'utilisateur
+        const user = await User.findById(req.user.userId);
+        
+        if (user) {
+            user.stats.questionsAnswered += session.totalQuestions;
+            user.stats.correctAnswers += session.correctAnswers;
+            user.stats.totalScore += session.score;
+            
+            // Mettre à jour la série de bonnes réponses
+            // (simplifié pour cet exemple)
+            const accuracy = session.correctAnswers / session.totalQuestions;
+            if (accuracy >= 0.8) {
+                user.stats.streak += 1;
+            } else {
+                user.stats.streak = 0;
+            }
+            
+            await user.save();
+        }
+        
+        res.json({
+            success: true,
+            message: 'Quiz terminé avec succès',
+            data: {
+                score: session.score,
+                correctAnswers: session.correctAnswers,
+                totalQuestions: session.totalQuestions,
+                timeSpent: session.timeSpent,
+                accuracy: (session.correctAnswers / session.totalQuestions) * 100
+            }
+        });
+    } catch (error) {
+        console.error('Erreur lors de la finalisation du quiz:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erreur serveur lors de la finalisation du quiz'
+        });
+    }
+});
+
+// Routes pour les utilisateurs
+app.get('/api/users/leaderboard', async (req, res) => {
+    try {
+        const { limit = 10, page = 1 } = req.query;
+        
+        const users = await User.find({}, 'username profile stats')
+            .sort({ 'stats.totalScore': -1 })
+            .limit(parseInt(limit))
+            .skip((parseInt(page) - 1) * parseInt(limit));
+        
+        const total = await User.countDocuments();
+        
+        res.json({
+            success: true,
+            data: users,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                pages: Math.ceil(total / parseInt(limit))
+            }
+        });
+    } catch (error) {
+        console.error('Erreur lors de la récupération du classement:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erreur serveur lors de la récupération du classement'
+        });
+    }
+});
+
+app.get('/api/users/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        const user = await User.findById(id, '-password -verificationToken -resetPasswordToken');
+        
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'Utilisateur non trouvé'
+            });
+        }
+        
+        // Récupérer les sessions de quiz de l'utilisateur
+        const quizSessions = await QuizSession.find({ user: id, completed: true })
+            .populate('quiz', 'title difficulty')
+            .sort({ endTime: -1 })
+            .limit(10);
+        
+        res.json({
+            success: true,
+            data: {
+                user,
+                recentQuizSessions: quizSessions
+            }
+        });
+    } catch (error) {
+        console.error('Erreur lors de la récupération de l\'utilisateur:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erreur serveur lors de la récupération de l\'utilisateur'
+        });
+    }
+});
+
+// Routes pour l'administration
+app.get('/api/admin/stats', authenticate, requireRole(['admin']), async (req, res) => {
+    try {
+        // Statistiques des utilisateurs
+        const totalUsers = await User.countDocuments();
+        const activeUsers = await User.countDocuments({ 
+            lastLogin: { $gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) } 
+        });
+        
+        // Statistiques des questions
+        const totalQuestions = await Question.countDocuments();
+        const publishedQuestions = await Question.countDocuments({ isPublished: true });
+        
+        // Statistiques des quiz
+        const totalQuizzes = await Quiz.countDocuments();
+        const publicQuizzes = await Quiz.countDocuments({ isPublic: true });
+        
+        // Statistiques des sessions de quiz
+        const totalQuizSessions = await QuizSession.countDocuments();
+        const completedQuizSessions = await QuizSession.countDocuments({ completed: true });
+        
+        // Questions les plus populaires
+        const popularQuestions = await Question.find({ isPublished: true })
+            .sort({ 'stats.timesAsked': -1 })
+            .limit(5)
+            .select('title stats.timesAsked stats.correctAnswers');
+        
+        // Quiz les plus populaires
+        const popularQuizzes = await Quiz.find({ isPublic: true })
+            .sort({ 'stats.timesTaken': -1 })
+            .limit(5)
+            .select('title stats.timesTaken stats.averageScore');
+        
+        res.json({
+            success: true,
+            data: {
+                users: {
+                    total: totalUsers,
+                    active: activeUsers
+                },
+                questions: {
+                    total: totalQuestions,
+                    published: publishedQuestions
+                },
+                quizzes: {
+                    total: totalQuizzes,
+                    public: publicQuizzes
+                },
+                sessions: {
+                    total: totalQuizSessions,
+                    completed: completedQuizSessions
+                },
+                popularQuestions,
+                popularQuizzes
+            }
+        });
+    } catch (error) {
+        console.error('Erreur lors de la récupération des statistiques admin:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erreur serveur lors de la récupération des statistiques admin'
+        });
+    }
+});
+
+// SECTION 9: SERVIR LES FICHIERS STATIQUES EN PRODUCTION
+
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, '../frontend/build')));
+    
+    app.get('*', (req, res) => {
+        res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
+    });
+}
+
+// SECTION 10: GESTION DES ERREURS
+
+// Middleware de gestion des erreurs 404
+app.use((req, res) => {
+    res.status(404).json({
+        success: false,
+        message: 'Route non trouvée'
+    });
+});
+
+// Middleware de gestion des erreurs globales
+app.use((err, req, res, next) => {
+    console.error('Erreur non gérée:', err);
+    
+    // Erreur de validation Mongoose
+    if (err.name === 'ValidationError') {
+        const errors = Object.values(err.errors).map(e => e.message);
+        return res.status(400).json({
+            success: false,
+            message: 'Données invalides',
+            errors
+        });
+    }
+    
+    // Erreur JWT
+    if (err.name === 'JsonWebTokenError') {
+        return res.status(401).json({
+            success: false,
+            message: 'Token invalide'
+        });
+    }
+    
+    // Erreur de duplication MongoDB
+    if (err.code === 11000) {
+        const field = Object.keys(err.keyValue)[0];
+        return res.status(400).json({
+            success: false,
+            message: \`\${field} existe déjà\`
+        });
+    }
+    
+    // Erreur par défaut
+    res.status(500).json({
+        success: false,
+        message: 'Erreur interne du serveur'
+    });
+});
+
+// SECTION 11: DÉMARRAGE DU SERVEUR
+
+// Création du serveur HTTP/HTTPS
+let server;
+
+if (process.env.NODE_ENV === 'production' && process.env.SSL_KEY && process.env.SSL_CERT) {
+    const privateKey = fs.readFileSync(process.env.SSL_KEY, 'utf8');
+    const certificate = fs.readFileSync(process.env.SSL_CERT, 'utf8');
+    const credentials = { key: privateKey, cert: certificate };
+    
+    server = https.createServer(credentials, app);
+} else {
+    server = http.createServer(app);
+}
+
+// Démarrer le serveur
+server.listen(PORT, HOST, () => {
+    console.log(\`Serveur démarré sur \${HOST}:\${PORT}\`);
+    console.log(\`Environnement: \${process.env.NODE_ENV || 'development'}\`);
+});
+
+// Gestion de la fermeture propre du serveur
+process.on('SIGINT', async () => {
+    console.log('\nArrêt du serveur en cours...');
+    
+    // Fermer la connexion à la base de données
+    await mongoose.connection.close();
+    console.log('Déconnecté de MongoDB');
+    
+    // Fermer le serveur
+    server.close(() => {
+        console.log('Serveur arrêté');
+        process.exit(0);
+    });
+});
+
+// Gestion des erreurs non catchées
+process.on('uncaughtException', (error) => {
+    console.error('Exception non catchée:', error);
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Rejet non géré à:', promise, 'raison:', reason);
+    process.exit(1);
+});
+
+// SECTION 12: FONCTIONS UTILITAIRES
+
+// Fonction pour générer un token aléatoire
+function generateToken(length = 32) {
+    return crypto.randomBytes(length).toString('hex');
+}
+
+// Fonction pour formater la durée
+function formatDuration(seconds) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    if (hours > 0) {
+        return \`\${hours}h \${minutes}m \${secs}s\`;
+    } else if (minutes > 0) {
+        return \`\${minutes}m \${secs}s\`;
+    } else {
+        return \`\${secs}s\`;
+    }
+}
+
+// Fonction pour calculer le niveau d'un utilisateur basé sur son score
+function calculateLevel(score) {
+    return Math.floor(score / 100) + 1;
+}
+
+// Exportation pour les tests
+module.exports = app;
+`;
+                document.getElementById('code').value = extendedCode;
+            }
+
+            // Charger le code étendu au démarrage
+            generateExtendedCode();
+        });
+    </script>
+</body>
+  </html>
